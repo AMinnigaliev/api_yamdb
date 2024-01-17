@@ -13,7 +13,7 @@ class Category(models.Model):
         return self.name
 
 
-class Gener(models.Model):
+class Genre(models.Model):
     name = models.CharField('Название жанра', max_length=256)
     slug = models.SlugField('Slug жанра', max_length=50, unique=True)
 
@@ -26,8 +26,8 @@ class Title(models.Model):
     year = models.DateField('Год выпуска', auto_now_add=True)
     description = models.TextField('Описание')
     genres = models.ManyToManyField(
-        Gener,
-        through='GenerTitle',
+        Genre,
+        through='GenreTitle',
         verbose_name='Жанр',
     )
     category = models.ForeignKey(
@@ -42,8 +42,8 @@ class Title(models.Model):
         return self.name
 
 
-class GenerTitle(models.Model):
-    genre = models.ForeignKey(Gener, on_delete=models.CASCADE)
+class GenreTitle(models.Model):
+    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
     title = models.ForeignKey(Title, on_delete=models.CASCADE)
 
     def __str__(self):
