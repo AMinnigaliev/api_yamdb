@@ -25,7 +25,7 @@ class Title(models.Model):
     name = models.CharField('Название', max_length=256)
     year = models.DateField('Год выпуска', auto_now_add=True)
     description = models.TextField('Описание')
-    genres = models.ManyToManyField(
+    genre = models.ManyToManyField(
         Genre,
         through='GenreTitle',
         verbose_name='Жанр',
