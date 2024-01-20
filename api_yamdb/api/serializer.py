@@ -1,11 +1,19 @@
 from rest_framework import serializers
 
-
-class SignupSerializer(serializers.Seializer):
-    email = serializers.EmailField(max_length=254, requared=True)
-    username = serializers.CharField(max_length=150, requared=True)
+from users.validators import validate_username
 
 
-class TokenSerializer(serializers.Seializer):
-    confirmation_code = serializers.CharField(required=True)
-    username = serializers.CharField(max_length=150, requared=True)
+class MixinUsernameSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=150, required=True)
+
+    def validate_username(self, value):
+        validate_username(value)
+        return value
+
+
+class SignupSerializer(MixinUsernameSerializer):
+    email = serializers.EmailField(max_length=254, required=True)
+
+
+class TokenSerializer(MixinUsernameSerializer):
+    confirmation_code = serializers.CharField(max_length=6, required=True)
