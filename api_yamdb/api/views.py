@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.core.mail import send_mail
+from django.contrib.auth import get_user_model
 from django.db.utils import IntegrityError
 from django.shortcuts import get_object_or_404
 from django.utils.crypto import get_random_string
@@ -9,7 +10,9 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from api.serializer import SignupSerializer, TokenSerializer
-from users.models import MyUser
+
+
+User = get_user_model()
 
 
 @api_view(['POST'])
@@ -21,7 +24,7 @@ def signup(request):
     email = serializer.validated_data.get('email')
     username = serializer.validated_data.get('username')
     try:
-        user = MyUser.objects.create(
+        user, created = User.objects.get_or_create(
             email=email,
             username=username
         )
@@ -29,7 +32,8 @@ def signup(request):
         return Response(
             {'error': [
                 (f'Пользователь с username = {username} '
-                 f'и/или email = {email} уже существует!')
+                 f'или email = {email} уже существует! '
+                 'Если это вы, проверьте правильность введённых данных.')
             ]},
             status=status.HTTP_400_BAD_REQUEST
         )
@@ -51,7 +55,7 @@ def token(request):
     serializer = TokenSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     user = get_object_or_404(
-        MyUser,
+        User,
         username=serializer.validated_data.get('username')
     )
     confirmation_code = serializer.validated_data.get('confirmation_code')
