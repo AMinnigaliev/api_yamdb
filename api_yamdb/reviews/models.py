@@ -71,6 +71,14 @@ class Review(models.Model):
         related_name='reviews',
     )
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['author', 'title'],
+                name='unique_author_title',
+            )
+        ]
+
     def __str__(self):
         return self.score
 

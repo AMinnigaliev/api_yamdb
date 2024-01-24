@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.db.models import Avg, F
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, mixins
@@ -12,6 +13,13 @@ from api.serializers import (TitleGetSerializer,
                              CommentSerializer,
                              ReviewSerializer,)
 from reviews.models import Title, Genre, Category, Comment, Review
+
+
+User = get_user_model() # НЕОБХОДИМО УБРАТЬ!!!!!!!!!!!!!!!++++===----!!!!!!
+
+
+def get_title_obj(title_id):
+    return get_object_or_404(Title, pk=title_id)
 
 
 class GenreViewSet(mixins.CreateModelMixin,
@@ -73,11 +81,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_queryset(self):
-        title = get_object_or_404(Title, pk=self.kwargs['title_id'])
+        title = get_title_obj(self.kwargs['title_id'])
         return Review.objects.filter(title=title)
 
     def perform_create(self, serializer):
         serializer.save(
-            author=self.request.user,
-            title=self.kwargs['review_id'],
+            # author=self.request.user,
+            author=User.objects.get(pk=1),
+            title=get_title_obj(self.kwargs['title_id']),
         )
