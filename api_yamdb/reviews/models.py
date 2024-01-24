@@ -10,7 +10,7 @@ class Category(models.Model):
     slug = models.SlugField('Slug категории', max_length=50, unique=True)
 
     def __str__(self):
-        return self.name
+        return self.slug
 
 
 class Genre(models.Model):
@@ -18,7 +18,7 @@ class Genre(models.Model):
     slug = models.SlugField('Slug жанра', max_length=50, unique=True)
 
     def __str__(self):
-        return self.name
+        return self.slug
 
 
 class Title(models.Model):
@@ -64,7 +64,7 @@ class Review(models.Model):
     )
     pub_date = models.DateTimeField(
         'Дата публикации отзыва', auto_now_add=True)
-    title_id = models.ForeignKey(
+    title = models.ForeignKey(
         Title,
         verbose_name='ID произведения',
         on_delete=models.CASCADE,
@@ -85,7 +85,7 @@ class Comment(models.Model):
     )
     pub_date = models.DateTimeField(
         'Дата публикации комментария', auto_now_add=True)
-    review_id = models.ForeignKey(
+    review = models.ForeignKey(
         Review,
         verbose_name='ID отзыва',
         on_delete=models.CASCADE,
