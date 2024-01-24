@@ -1,3 +1,5 @@
+import os
+from datetime import timedelta
 from pathlib import Path
 
 
@@ -63,9 +65,6 @@ DATABASES = {
 }
 
 
-AUTH_USER_MODEL = 'users.MyUser'
-
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -96,3 +95,25 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
+
+
+AUTH_USER_MODEL = 'users.MyUser'
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(weeks=1),
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
+
+DEFAULT_FROM_EMAIL = 'yamdb@yandex.ru'
+EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'send_emails')
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
