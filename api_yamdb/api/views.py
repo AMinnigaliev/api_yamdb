@@ -4,13 +4,15 @@ from django.contrib.auth import get_user_model
 from django.db.utils import IntegrityError
 from django.shortcuts import get_object_or_404
 from django.utils.crypto import get_random_string
-from rest_framework import permissions, status
+from rest_framework import filters, mixins, permissions, status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from api.serializer import SignupSerializer, TokenSerializer
-
+from api.serializers import (
+    GenreSerializer, CategorySerializer, SignupSerializer, TokenSerializer)
+from api.permissions import IsAdminUserOrReadOnly
+from reviews.models import Genre, Category
 
 User = get_user_model()
 
@@ -26,7 +28,7 @@ def signup(request):
     try:
         user, created = User.objects.get_or_create(
             email=email,
-            username=username
+            username=username,
         )
     except IntegrityError:
         return Response(
@@ -35,7 +37,7 @@ def signup(request):
                  f'или email = {email} уже существует! '
                  'Если это вы, проверьте правильность введённых данных.')
             ]},
-            status=status.HTTP_400_BAD_REQUEST
+            status=status.HTTP_400_BAD_REQUEST,
         )
     user.confirmation_code = get_random_string(length=6)
     user.save()
@@ -56,15 +58,44 @@ def token(request):
     serializer.is_valid(raise_exception=True)
     user = get_object_or_404(
         User,
-        username=serializer.validated_data.get('username')
+        username=serializer.validated_data.get('username'),
     )
     confirmation_code = serializer.validated_data.get('confirmation_code')
     if user.confirmation_code == confirmation_code:
         return Response(
             {'Токен': str(RefreshToken.for_user(user).access_token)},
-            status=status.HTTP_200_OK
+            status=status.HTTP_200_OK,
         )
     return Response(
         {'confirmation_code': 'Неверный код подтверждения'},
-        status=status.HTTP_400_BAD_REQUEST
+        status=status.HTTP_400_BAD_REQUEST,
     )
+
+
+class GenreCategoryViewMixin:
+
+    lookup_field = 'slug'
+    permission_classes = (IsAdminUserOrReadOnly,)
+    http_method_names = ['get', 'post', 'delete']
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('=slug',)
+
+
+class GenreViewSet(GenreCategoryViewMixin,
+                   mixins.CreateModelMixin,
+                   mixins.DestroyModelMixin,
+                   mixins.ListModelMixin,
+                   viewsets.GenericViewSet,):
+
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+
+
+class CategoryViewSet(GenreCategoryViewMixin,
+                      mixins.CreateModelMixin,
+                      mixins.DestroyModelMixin,
+                      mixins.ListModelMixin,
+                      viewsets.GenericViewSet,):
+
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
