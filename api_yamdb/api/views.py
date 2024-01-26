@@ -1,9 +1,9 @@
 from django.db.models import Avg, F
-from rest_framework import viewsets, mixins
+from rest_framework import filters, mixins, viewsets
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import SAFE_METHODS
 
-from api.permissions import IsAdminUserOrReadOnly
+from api.permissions import IsAdminUser, IsSuperUser, ReadOnly
 from api.serializers import (TitleGetSerializer,
                              TitlePostPatchDelSerializer,
                              GenreSerializer,
@@ -11,34 +11,39 @@ from api.serializers import (TitleGetSerializer,
 from reviews.models import Title, Genre, Category
 
 
-class GenreViewSet(mixins.CreateModelMixin,
+class GenreCategoryViewMixin:
+
+    lookup_field = 'slug'
+    permission_classes = [IsSuperUser | IsAdminUser | ReadOnly]
+    http_method_names = ['get', 'post', 'delete']
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('=slug',)
+
+
+class GenreViewSet(GenreCategoryViewMixin,
+                   mixins.CreateModelMixin,
                    mixins.DestroyModelMixin,
                    mixins.ListModelMixin,
                    viewsets.GenericViewSet,):
 
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    lookup_field = 'slug'
-    permission_classes = (IsAdminUserOrReadOnly,)
-    http_method_names = ['get', 'post', 'delete']
 
 
-class CategoryViewSet(mixins.CreateModelMixin,
+class CategoryViewSet(GenreCategoryViewMixin,
+                      mixins.CreateModelMixin,
                       mixins.DestroyModelMixin,
                       mixins.ListModelMixin,
                       viewsets.GenericViewSet,):
 
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    lookup_field = 'slug'
-    permission_classes = (IsAdminUserOrReadOnly,)
-    http_method_names = ['get', 'post', 'delete']
 
 
 class TitleViewSet(viewsets.ModelViewSet):
 
     queryset = Title.objects.all()
-    permission_classes = (IsAdminUserOrReadOnly,)
+    permission_classes = [IsSuperUser | IsAdminUser | ReadOnly]
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('category', 'genre', 'name', 'year')
     http_method_names = ['get', 'post', 'patch', 'delete']

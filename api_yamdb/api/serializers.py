@@ -21,22 +21,16 @@ class GenreSerializer(serializers.ModelSerializer):
         lookup_field = 'slug'
 
 
-class TitleSerializerMixin:
-
-    class Meta:
-        model = Title
-        fields = (
-            'id', 'name', 'year', 'rating', 'description', 'genre', 'category')
-
-
-class TitlePostPatchDelSerializer(TitleSerializerMixin,
-                                  serializers.ModelSerializer,):
-
+class TitlePostPatchDelSerializer(serializers.ModelSerializer):
     category = serializers.SlugRelatedField(
         queryset=Category.objects.all(), slug_field='slug')
     genre = serializers.SlugRelatedField(
         queryset=Genre.objects.all(), many=True, slug_field='slug')
-    rating = serializers.FloatField(read_only=True)
+
+    class Meta:
+        model = Title
+        fields = (
+            'id', 'name', 'year', 'description', 'genre', 'category')
 
     def validate_year(self, value):
         year = date.today().year
@@ -49,9 +43,20 @@ class TitlePostPatchDelSerializer(TitleSerializerMixin,
         return TitleGetSerializer(instance).data
 
 
-class TitleGetSerializer(TitleSerializerMixin,
-                         serializers.ModelSerializer,):
-
+class TitleGetSerializer(serializers.ModelSerializer):
     category = CategorySerializer()
     genre = GenreSerializer(many=True)
-    rating = serializers.FloatField(read_only=True)
+    rating = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Title
+        fields = (
+            'id', 'name', 'year', 'rating', 'description', 'genre', 'category')
+
+    def to_representation(self, instance):
+        try:
+            if instance.rating:
+                instance.rating = round(instance.rating)
+        except AttributeError:
+            instance.rating = None
+        return super().to_representation(instance)
