@@ -38,11 +38,10 @@ def signup(request):
         )
     except IntegrityError:
         return Response(
-            {'error': [
+            {'error':
                 (f'Пользователь с username = {username} '
                  f'или email = {email} уже существует! '
-                 'Если это вы, проверьте правильность введённых данных.')
-            ]},
+                 'Если это вы, проверьте правильность введённых данных.')},
             status=status.HTTP_400_BAD_REQUEST,
         )
     user.confirmation_code = get_random_string(length=6)
