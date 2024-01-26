@@ -1,18 +1,24 @@
 from django.conf import settings
 from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
+from django.db.models import Avg, F
 from django.db.utils import IntegrityError
 from django.shortcuts import get_object_or_404
 from django.utils.crypto import get_random_string
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, permissions, status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from api.serializers import (
-    GenreSerializer, CategorySerializer, SignupSerializer, TokenSerializer)
-from api.permissions import IsAdminUserOrReadOnly
-from reviews.models import Genre, Category
+from api.serializers import (TitleGetSerializer,
+                             TitlePostPatchDelSerializer,
+                             GenreSerializer,
+                             CategorySerializer,
+                             SignupSerializer,
+                             TokenSerializer,)
+from api.permissions import IsAdminUser, IsSuperUser, ReadOnly
+from reviews.models import Title, Genre, Category
 
 User = get_user_model()
 
@@ -75,7 +81,7 @@ def token(request):
 class GenreCategoryViewMixin:
 
     lookup_field = 'slug'
-    permission_classes = (IsAdminUserOrReadOnly,)
+    permission_classes = [IsSuperUser | IsAdminUser | ReadOnly]
     http_method_names = ['get', 'post', 'delete']
     filter_backends = (filters.SearchFilter,)
     search_fields = ('=slug',)
@@ -99,3 +105,20 @@ class CategoryViewSet(GenreCategoryViewMixin,
 
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+
+
+class TitleViewSet(viewsets.ModelViewSet):
+
+    queryset = Title.objects.all()
+    permission_classes = [IsSuperUser | IsAdminUser | ReadOnly]
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('category', 'genre', 'name', 'year')
+    http_method_names = ['get', 'post', 'patch', 'delete']
+
+    def get_queryset(self):
+        return super().get_queryset().annotate(rating=Avg(F('reviews__score')))
+
+    def get_serializer_class(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            return TitleGetSerializer
+        return TitlePostPatchDelSerializer
