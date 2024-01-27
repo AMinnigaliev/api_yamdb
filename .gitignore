@@ -148,3 +148,5 @@ dmypy.json
 # папки со статикой и медиа
 media/
 
+# папуи с миграциями в приложениях reviews и users
+migrations/

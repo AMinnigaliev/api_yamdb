@@ -5,10 +5,26 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
-from reviews.models import Title, Genre, Category, Comment, Review
-
+from reviews.models import Category, Comment, Genre, Title, Review
+from users.validators import validate_username
 
 User = get_user_model() # НЕОБХОДИМО УБРАТЬ!!!!!!!!!!!!!!!++++===----!!!!!!
+
+
+class MixinUsernameSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=150, required=True)
+
+    def validate_username(self, value):
+        validate_username(value)
+        return value
+
+
+class SignupSerializer(MixinUsernameSerializer, serializers.Serializer):
+    email = serializers.EmailField(max_length=254, required=True)
+
+
+class TokenSerializer(MixinUsernameSerializer, serializers.Serializer):
+    confirmation_code = serializers.CharField(max_length=6, required=True)
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -27,22 +43,16 @@ class GenreSerializer(serializers.ModelSerializer):
         lookup_field = 'slug'
 
 
-class TitleSerializerMixin:
-
-    class Meta:
-        model = Title
-        fields = (
-            'id', 'name', 'year', 'rating', 'description', 'genre', 'category')
-
-
-class TitlePostPatchDelSerializer(TitleSerializerMixin,
-                                  serializers.ModelSerializer,):
-
+class TitlePostPatchDelSerializer(serializers.ModelSerializer):
     category = serializers.SlugRelatedField(
         queryset=Category.objects.all(), slug_field='slug')
     genre = serializers.SlugRelatedField(
         queryset=Genre.objects.all(), many=True, slug_field='slug')
-    rating = serializers.FloatField(read_only=True)
+
+    class Meta:
+        model = Title
+        fields = (
+            'id', 'name', 'year', 'description', 'genre', 'category')
 
     def validate_year(self, value):
         year = date.today().year
@@ -55,16 +65,26 @@ class TitlePostPatchDelSerializer(TitleSerializerMixin,
         return TitleGetSerializer(instance).data
 
 
-class TitleGetSerializer(TitleSerializerMixin,
-                         serializers.ModelSerializer,):
-
+class TitleGetSerializer(serializers.ModelSerializer):
     category = CategorySerializer()
     genre = GenreSerializer(many=True)
-    rating = serializers.FloatField(read_only=True)
+    rating = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Title
+        fields = (
+            'id', 'name', 'year', 'rating', 'description', 'genre', 'category')
+
+    def to_representation(self, instance):
+        try:
+            if instance.rating:
+                instance.rating = round(instance.rating)
+        except AttributeError:
+            instance.rating = None
+        return super().to_representation(instance)
 
 
 class CommentSerializer(serializers.ModelSerializer):
-
     author = serializers.SlugRelatedField(
         read_only=True, slug_field='username')
 
@@ -79,7 +99,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         read_only=True,
         slug_field='username',
         default=User.objects.get(pk=1),
-        default=serializers.CurrentUserDefault(),
+        # default=serializers.CurrentUserDefault(),
     )
     title = serializers.HiddenField(default=None)
 
@@ -98,10 +118,9 @@ class ReviewSerializer(serializers.ModelSerializer):
         print(f'\ndeepcopy = {copy.deepcopy(self._declared_fields)}\n')
         print(f'\n_declared_fields = {self._declared_fields}\n')
         return super().get_fields()
-        
+
     # def create(self, validated_data):
     #     print(f'\nvalidated_data = {validated_data}\n')
     #     print(f'\nCurrentUserDefault = '
     #           f'{self.data}\n')
     #     return super().create(validated_data)
-        
