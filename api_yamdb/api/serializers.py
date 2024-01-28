@@ -1,12 +1,10 @@
 from datetime import date
 
-from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from reviews.models import Category, Comment, Genre, Title, Review
+from users.models import MyUser
 from users.validators import validate_username
-
-User = get_user_model
 
 
 class UsernameSerializer(serializers.Serializer):
@@ -82,13 +80,17 @@ class TitleGetSerializer(serializers.ModelSerializer):
         return super().to_representation(instance)
 
 
-class UserSerializer(UsernameSerializer):
+class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = User
+        model = MyUser
         fields = (
             'username', 'email', 'first_name', 'last_name', 'bio', 'role',
         )
+
+    def validate_username(self, value):
+        validate_username(value)
+        return value
 
 
 class MeUserSerializer(UserSerializer):
@@ -97,14 +99,13 @@ class MeUserSerializer(UserSerializer):
         read_only_fields = ('role',)
 
 
-# class CommentSerializer(serializers.ModelSerializer):
-#     author = serializers.SlugRelatedField(
-#         read_only=True, slug_field='username')
-#
-#     class Meta:
-#         model = Comment
-#         fields = ('id', 'text', 'author', 'pub_date')
-#         # lookup_field = 'comment'
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        read_only=True, slug_field='username')
+
+    class Meta:
+        model = Comment
+        fields = ('id', 'text', 'author', 'pub_date')
 
 
 class ReviewSerializer(serializers.ModelSerializer):
