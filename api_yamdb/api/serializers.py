@@ -1,10 +1,13 @@
 from datetime import date
 
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from reviews.models import Category, Comment, Genre, Title, Review
+from reviews.models import Category, Comment, Genre, Review, Title
 from users.models import MyUser
 from users.validators import validate_username
+
+User = get_user_model
 
 
 class UsernameSerializer(serializers.Serializer):
@@ -21,6 +24,25 @@ class SignupSerializer(UsernameSerializer):
 
 class TokenSerializer(UsernameSerializer):
     confirmation_code = serializers.CharField(max_length=6, required=True)
+
+
+class UserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = MyUser
+        fields = (
+            'username', 'email', 'first_name', 'last_name', 'bio', 'role',
+        )
+
+    def validate_username(self, value):
+        validate_username(value)
+        return value
+
+
+class MeUserSerializer(UserSerializer):
+
+    class Meta(UserSerializer.Meta):
+        read_only_fields = ('role',)
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -78,25 +100,6 @@ class TitleGetSerializer(serializers.ModelSerializer):
         except AttributeError:
             instance.rating = None
         return super().to_representation(instance)
-
-
-class UserSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = MyUser
-        fields = (
-            'username', 'email', 'first_name', 'last_name', 'bio', 'role',
-        )
-
-    def validate_username(self, value):
-        validate_username(value)
-        return value
-
-
-class MeUserSerializer(UserSerializer):
-
-    class Meta(UserSerializer.Meta):
-        read_only_fields = ('role',)
 
 
 class CommentSerializer(serializers.ModelSerializer):

@@ -3,7 +3,6 @@ from django.db import models
 
 from users.validators import validate_username
 
-
 CHOICES = (
     ('user', 'Пользователь'),
     ('moderator', 'Модератор'),
@@ -47,4 +46,4 @@ class MyUser(AbstractUser):
 
     @property
     def is_admin(self):
-        return self.role == 'admin' or self.is_staff
+        return self.role == 'admin' or self.is_superuser
