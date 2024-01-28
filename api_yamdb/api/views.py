@@ -7,17 +7,19 @@ from django.shortcuts import get_object_or_404
 from django.utils.crypto import get_random_string
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, permissions, status, viewsets
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from api.permissions import IsAdminUser, IsSuperUser, ReadOnly
 from api.serializers import (TitleGetSerializer,
                              TitlePostPatchDelSerializer,
                              GenreSerializer,
                              CategorySerializer,
                              SignupSerializer,
-                             TokenSerializer,)
-from api.permissions import IsAdminUser, IsSuperUser, ReadOnly
+                             TokenSerializer,
+                             UserSerializer,
+                             MeUserSerializer)
 from reviews.models import Title, Genre, Category
 
 User = get_user_model()
@@ -68,7 +70,7 @@ def token(request):
     confirmation_code = serializer.validated_data.get('confirmation_code')
     if user.confirmation_code == confirmation_code:
         return Response(
-            {'Токен': str(RefreshToken.for_user(user).access_token)},
+            {'token': str(RefreshToken.for_user(user).access_token)},
             status=status.HTTP_200_OK,
         )
     return Response(
@@ -121,3 +123,35 @@ class TitleViewSet(viewsets.ModelViewSet):
         if self.request.method in permissions.SAFE_METHODS:
             return TitleGetSerializer
         return TitlePostPatchDelSerializer
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    """Управление пользователями."""
+    lookup_field = 'username'
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = (IsAdminUser,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('username',)
+
+    @action(
+        methods=['get', 'patch'],
+        detail=False,
+        url_path='me',
+        url_name='users_detail',
+        permission_classes=[permissions.IsAuthenticated],
+        serializer_class=MeUserSerializer,
+    )
+    def users_detail(self, request):
+        user = request.user
+        if request.method == 'GET':
+            serializer = self.get_serializer(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        serializer = self.get_serializer(
+            user,
+            data=request.data,
+            partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)

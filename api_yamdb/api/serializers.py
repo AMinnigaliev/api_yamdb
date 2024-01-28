@@ -1,12 +1,15 @@
 from datetime import date
 
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from reviews.models import Category, Genre, Title
 from users.validators import validate_username
 
+User = get_user_model
 
-class MixinUsernameSerializer(serializers.Serializer):
+
+class UsernameSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150, required=True)
 
     def validate_username(self, value):
@@ -14,11 +17,11 @@ class MixinUsernameSerializer(serializers.Serializer):
         return value
 
 
-class SignupSerializer(MixinUsernameSerializer, serializers.Serializer):
+class SignupSerializer(UsernameSerializer):
     email = serializers.EmailField(max_length=254, required=True)
 
 
-class TokenSerializer(MixinUsernameSerializer, serializers.Serializer):
+class TokenSerializer(UsernameSerializer):
     confirmation_code = serializers.CharField(max_length=6, required=True)
 
 
@@ -77,3 +80,18 @@ class TitleGetSerializer(serializers.ModelSerializer):
         except AttributeError:
             instance.rating = None
         return super().to_representation(instance)
+
+
+class UserSerializer(UsernameSerializer):
+
+    class Meta:
+        model = User
+        fields = (
+            'username', 'email', 'first_name', 'last_name', 'bio', 'role',
+        )
+
+
+class MeUserSerializer(UserSerializer):
+
+    class Meta(UserSerializer.Meta):
+        read_only_fields = ('role',)
