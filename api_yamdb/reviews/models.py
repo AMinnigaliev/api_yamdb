@@ -64,12 +64,20 @@ class Review(models.Model):
     )
     pub_date = models.DateTimeField(
         'Дата публикации отзыва', auto_now_add=True)
-    title_id = models.ForeignKey(
+    title = models.ForeignKey(
         Title,
         verbose_name='ID произведения',
         on_delete=models.CASCADE,
         related_name='reviews',
     )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['author', 'title'],
+                name='unique_author_title',
+            )
+        ]
 
     def __str__(self):
         return self.score
@@ -85,7 +93,7 @@ class Comment(models.Model):
     )
     pub_date = models.DateTimeField(
         'Дата публикации комментария', auto_now_add=True)
-    review_id = models.ForeignKey(
+    review = models.ForeignKey(
         Review,
         verbose_name='ID отзыва',
         on_delete=models.CASCADE,

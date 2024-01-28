@@ -27,6 +27,7 @@ class MyUser(AbstractUser):
         'Проверочный код',
         max_length=6,
         blank=True,
+        null=True,
     )
     first_name = models.CharField(
         'Имя',
