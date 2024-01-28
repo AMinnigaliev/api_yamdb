@@ -8,6 +8,7 @@ from django.utils.crypto import get_random_string
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, permissions, status, viewsets
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -19,11 +20,11 @@ from api.serializers import (TitleGetSerializer,
                              ReviewSerializer,
                              SignupSerializer,
                              TokenSerializer,)
-from api.permissions import IsAdminUser, IsSuperUser, ReadOnly
+from api.permissions import (IsAdminUserOrReadOnly,
+                             IsAuthorAdminModeratorOrReadOnly,)
 from reviews.models import Title, Genre, Category, Comment, Review
 
-
-User = get_user_model() # НЕОБХОДИМО УБРАТЬ!!!!!!!!!!!!!!!++++===----!!!!!!
+User = get_user_model()
 
 
 def get_title_obj(title_id):
@@ -87,7 +88,7 @@ def token(request):
 class GenreCategoryViewMixin:
 
     lookup_field = 'slug'
-    permission_classes = [IsSuperUser | IsAdminUser | ReadOnly]
+    permission_classes = [IsAdminUserOrReadOnly]
     http_method_names = ['get', 'post', 'delete']
     filter_backends = (filters.SearchFilter,)
     search_fields = ('=slug',)
@@ -116,7 +117,7 @@ class CategoryViewSet(GenreCategoryViewMixin,
 class TitleViewSet(viewsets.ModelViewSet):
 
     queryset = Title.objects.all()
-    permission_classes = [IsSuperUser | IsAdminUser | ReadOnly]
+    permission_classes = [IsAdminUserOrReadOnly]
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('category', 'genre', 'name', 'year')
     http_method_names = ['get', 'post', 'patch', 'delete']
@@ -146,6 +147,8 @@ class CommentViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     http_method_names = ['get', 'post', 'patch', 'delete']
+    permission_classes = [
+        IsAuthenticatedOrReadOnly, IsAuthorAdminModeratorOrReadOnly]
 
     def get_queryset(self):
         title = get_title_obj(self.kwargs['title_id'])
@@ -153,7 +156,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(
-            # author=self.request.user,
-            author=User.objects.get(pk=1),
+            author=self.request.user,
             title=get_title_obj(self.kwargs['title_id']),
         )

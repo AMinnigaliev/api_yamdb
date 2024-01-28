@@ -27,6 +27,7 @@ class MyUser(AbstractUser):
         'Проверочный код',
         max_length=6,
         blank=True,
+        null=True,
     )
     bio = models.TextField(blank=True)
     role = models.CharField(max_length=9, choices=CHOICES, default='user')

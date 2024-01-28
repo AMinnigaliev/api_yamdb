@@ -1,14 +1,9 @@
-import copy
 from datetime import date
 
-from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
 
 from reviews.models import Category, Comment, Genre, Title, Review
 from users.validators import validate_username
-
-User = get_user_model() # НЕОБХОДИМО УБРАТЬ!!!!!!!!!!!!!!!++++===----!!!!!!
 
 
 class MixinUsernameSerializer(serializers.Serializer):
@@ -84,43 +79,39 @@ class TitleGetSerializer(serializers.ModelSerializer):
         return super().to_representation(instance)
 
 
-class CommentSerializer(serializers.ModelSerializer):
-    author = serializers.SlugRelatedField(
-        read_only=True, slug_field='username')
-
-    class Meta:
-        model = Comment
-        fields = ('id', 'text', 'author', 'pub_date')
-        # lookup_field = 'comment'
+# class CommentSerializer(serializers.ModelSerializer):
+#     author = serializers.SlugRelatedField(
+#         read_only=True, slug_field='username')
+#
+#     class Meta:
+#         model = Comment
+#         fields = ('id', 'text', 'author', 'pub_date')
+#         # lookup_field = 'comment'
 
 
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         read_only=True,
         slug_field='username',
-        default=User.objects.get(pk=1),
-        # default=serializers.CurrentUserDefault(),
+        default=serializers.CurrentUserDefault(),
     )
-    title = serializers.HiddenField(default=None)
 
     class Meta:
         model = Review
-        fields = ('id', 'text', 'author', 'score', 'pub_date', 'title')
-        lookup_field = 'review'
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Review.objects.all(),
-                fields=('author', 'title'),
-            )
-        ]
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
 
-    def get_fields(self):
-        print(f'\ndeepcopy = {copy.deepcopy(self._declared_fields)}\n')
-        print(f'\n_declared_fields = {self._declared_fields}\n')
-        return super().get_fields()
-
-    # def create(self, validated_data):
-    #     print(f'\nvalidated_data = {validated_data}\n')
-    #     print(f'\nCurrentUserDefault = '
-    #           f'{self.data}\n')
-    #     return super().create(validated_data)
+    def validate(self, data):
+        request = self.context.get('request')
+        if request.method == 'POST':
+            try:
+                title_id = self.context.get('view').kwargs.get('title_id')
+                author = request.user.id
+                Review.objects.get(
+                    title=title_id,
+                    author=author,
+                )
+                raise serializers.ValidationError(
+                    'You can add only one review per title!')
+            except Review.DoesNotExist:
+                pass
+        return data
