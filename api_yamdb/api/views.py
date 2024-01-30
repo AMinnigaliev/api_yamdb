@@ -37,7 +37,7 @@ def signup(request):
     email = serializer.validated_data.get('email')
     username = serializer.validated_data.get('username')
     try:
-        user, created = User.objects.get_or_create(
+        user, _ = User.objects.get_or_create(
             email=email,
             username=username,
         )
@@ -88,6 +88,7 @@ class UserViewSet(viewsets.ModelViewSet):
     """
     Управление пользователями.
     """
+
     lookup_field = 'username'
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -125,6 +126,7 @@ class GenreViewSet(GenreCategoryViewMixin):
     """
     Ресурс жанров произведений.
     """
+
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
 
@@ -133,6 +135,7 @@ class CategoryViewSet(GenreCategoryViewMixin):
     """
     Ресурс категорий произведений.
     """
+
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
@@ -141,6 +144,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     """
     Ресурс произведений.
     """
+
     queryset = Title.objects.all()
     permission_classes = [IsAdminUserOrReadOnly]
     filter_backends = (DjangoFilterBackend,)
@@ -160,6 +164,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     """
     Ресурс комментариев к отзывам.
     """
+
     serializer_class = CommentSerializer
     permission_classes = [
         IsAuthenticatedOrReadOnly, IsAuthorAdminModeratorOrReadOnly]
@@ -183,6 +188,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     """
     Ресурс отзывов на произведения.
     """
+
     serializer_class = ReviewSerializer
     http_method_names = ['get', 'post', 'patch', 'delete']
     permission_classes = [
