@@ -6,17 +6,18 @@ from django.db.utils import IntegrityError
 from django.shortcuts import get_object_or_404
 from django.utils.crypto import get_random_string
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, mixins, permissions, status, viewsets
+from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from api.filters import TitleFilter
+from api.mixins import GenreCategoryViewMixin
 from api.permissions import (IsAdminUser, IsAdminUserOrReadOnly,
                              IsAuthorAdminModeratorOrReadOnly)
 from api.serializers import (CategorySerializer, CommentSerializer,
-                             GenreSerializer, MeUserSerializer,
+                             GenreSerializer,
                              ReviewSerializer, SignupSerializer,
                              TitleGetSerializer, TitlePostPatchDelSerializer,
                              TokenSerializer, UserSerializer)
@@ -101,7 +102,7 @@ class UserViewSet(viewsets.ModelViewSet):
         url_path='me',
         url_name='users_detail',
         permission_classes=[permissions.IsAuthenticated],
-        serializer_class=MeUserSerializer,
+        serializer_class=UserSerializer,
     )
     def users_detail(self, request):
         user = request.user
@@ -114,24 +115,13 @@ class UserViewSet(viewsets.ModelViewSet):
             partial=True
         )
         serializer.is_valid(raise_exception=True)
+        if not request.user.is_admin:
+            serializer.validated_data.pop('role', None)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class GenreCategoryViewMixin:
-
-    lookup_field = 'slug'
-    permission_classes = [IsAdminUserOrReadOnly]
-    http_method_names = ['get', 'post', 'delete']
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
-
-
-class GenreViewSet(GenreCategoryViewMixin,
-                   mixins.CreateModelMixin,
-                   mixins.DestroyModelMixin,
-                   mixins.ListModelMixin,
-                   viewsets.GenericViewSet,):
+class GenreViewSet(GenreCategoryViewMixin):
     """
     Ресурс жанров произведений.
     """
@@ -139,11 +129,7 @@ class GenreViewSet(GenreCategoryViewMixin,
     serializer_class = GenreSerializer
 
 
-class CategoryViewSet(GenreCategoryViewMixin,
-                      mixins.CreateModelMixin,
-                      mixins.DestroyModelMixin,
-                      mixins.ListModelMixin,
-                      viewsets.GenericViewSet,):
+class CategoryViewSet(GenreCategoryViewMixin):
     """
     Ресурс категорий произведений.
     """
