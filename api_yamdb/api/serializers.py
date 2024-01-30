@@ -1,13 +1,9 @@
-from datetime import date
-
-from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from reviews.models import Category, Comment, Genre, Review, Title
-from users.models import MyUser
+from reviews.validators import validate_year
+from users.models import YamdbUser
 from users.validators import validate_username
-
-User = get_user_model
 
 
 class UsernameSerializer(serializers.Serializer):
@@ -29,7 +25,7 @@ class TokenSerializer(UsernameSerializer):
 class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = MyUser
+        model = YamdbUser
         fields = (
             'username', 'email', 'first_name', 'last_name', 'bio', 'role',
         )
@@ -73,10 +69,7 @@ class TitlePostPatchDelSerializer(serializers.ModelSerializer):
             'id', 'name', 'year', 'description', 'genre', 'category')
 
     def validate_year(self, value):
-        year = date.today().year
-        if value > year:
-            raise serializers.ValidationError(
-                'Год выпуска не может быть больше текущего.')
+        validate_year(value)
         return value
 
     def to_representation(self, instance):
@@ -96,9 +89,12 @@ class TitleGetSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         try:
             if instance.rating:
-                instance.rating = round(instance.rating)
+                if instance.rating is None:
+                    instance.rating = 0
+                else:
+                    instance.rating = round(instance.rating)
         except AttributeError:
-            instance.rating = None
+            instance.rating = 0
         return super().to_representation(instance)
 
 
