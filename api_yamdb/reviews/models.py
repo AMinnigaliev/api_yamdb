@@ -57,24 +57,26 @@ class Title(models.Model):
 
 
 class CommentReviewBaseModel(models.Model):
+
     text = models.TextField('Текст')
+    author = models.ForeignKey(
+        User,
+        verbose_name='username пользователя',
+        on_delete=models.CASCADE,
+    )
     pub_date = models.DateTimeField(
         'Дата публикации', auto_now_add=True)
 
     class Meta:
         abstract = True
+        default_related_name = u'%(model_name)ss'
 
     def __str__(self):
         return str(self.text[:CUT_LENGTH_TEXT])
 
 
 class Review(CommentReviewBaseModel):
-    author = models.ForeignKey(
-        User,
-        verbose_name='username пользователя',
-        on_delete=models.CASCADE,
-        related_name='reviews'
-    )
+
     score = models.PositiveSmallIntegerField(
         'Рейтинг',
         validators=[MaxValueValidator(10), MinValueValidator(1)],
@@ -83,10 +85,9 @@ class Review(CommentReviewBaseModel):
         Title,
         verbose_name='Произведение',
         on_delete=models.CASCADE,
-        related_name='reviews'
     )
 
-    class Meta:
+    class Meta(CommentReviewBaseModel.Meta):
         verbose_name = 'отзыв'
         verbose_name_plural = 'Отзывы'
         ordering = ('title', 'author')
@@ -99,20 +100,14 @@ class Review(CommentReviewBaseModel):
 
 
 class Comment(CommentReviewBaseModel):
-    author = models.ForeignKey(
-        User,
-        verbose_name='username автора комментария',
-        on_delete=models.CASCADE,
-        related_name='comments'
-    )
+
     review = models.ForeignKey(
         Review,
         verbose_name='Отзыв',
         on_delete=models.CASCADE,
-        related_name='comments'
     )
 
-    class Meta:
+    class Meta(CommentReviewBaseModel.Meta):
         verbose_name = 'комментарий'
         verbose_name_plural = 'Комментарии'
         ordering = ('review', 'author', '-pub_date')
