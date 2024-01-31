@@ -1,5 +1,9 @@
+from django.core.validators import validate_slug
 from rest_framework import serializers
 
+from api_yamdb.constants import (CODE_MAX_LENGTH,
+                                 EMAIL_MAX_LENGTH,
+                                 USERNAME_MAX_LENGTH)
 from reviews.models import Category, Comment, Genre, Review, Title
 from reviews.validators import validate_year
 from users.models import YamdbUser
@@ -7,7 +11,8 @@ from users.validators import validate_username
 
 
 class UsernameSerializer(serializers.Serializer):
-    username = serializers.CharField(max_length=150, required=True)
+    username = serializers.CharField(max_length=USERNAME_MAX_LENGTH,
+                                     required=True)
 
     def validate_username(self, value):
         validate_username(value)
@@ -15,11 +20,13 @@ class UsernameSerializer(serializers.Serializer):
 
 
 class SignupSerializer(UsernameSerializer):
-    email = serializers.EmailField(max_length=254, required=True)
+    email = serializers.EmailField(max_length=EMAIL_MAX_LENGTH,
+                                   required=True)
 
 
 class TokenSerializer(UsernameSerializer):
-    confirmation_code = serializers.CharField(max_length=6, required=True)
+    confirmation_code = serializers.CharField(max_length=CODE_MAX_LENGTH,
+                                              required=True)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -33,12 +40,6 @@ class UserSerializer(serializers.ModelSerializer):
     def validate_username(self, value):
         validate_username(value)
         return value
-
-
-class MeUserSerializer(UserSerializer):
-
-    class Meta(UserSerializer.Meta):
-        read_only_fields = ('role',)
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -61,7 +62,12 @@ class TitlePostPatchDelSerializer(serializers.ModelSerializer):
     category = serializers.SlugRelatedField(
         queryset=Category.objects.all(), slug_field='slug')
     genre = serializers.SlugRelatedField(
-        queryset=Genre.objects.all(), many=True, slug_field='slug')
+        queryset=Genre.objects.all(),
+        many=True,
+        slug_field='slug',
+        required=True,
+        validators=[validate_slug]
+    )
 
     class Meta:
         model = Title

@@ -24,8 +24,11 @@ auth_urlpatterns = [
     path('signup/', signup, name='signup'),
     path('token/', token, name='token'),
 ]
+api_urlpatterns = [
+    path('', include(router_v1.urls)),
+    path('auth/', include(auth_urlpatterns)),
+]
 
 urlpatterns = [
-    path('v1/', include(router_v1.urls)),
-    path('v1/auth/', include(auth_urlpatterns)),
+    path('v1/', include(api_urlpatterns)),
 ]

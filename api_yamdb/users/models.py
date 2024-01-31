@@ -1,8 +1,13 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from api_yamdb.constants import (USERNAME_MAX_LENGTH, EMAIL_MAX_LENGTH,
-    CODE_MAX_LENGTH, CHOICES, USER, ADMIN, MODERATOR)
+from api_yamdb.constants import (USERNAME_MAX_LENGTH,
+                                 EMAIL_MAX_LENGTH,
+                                 CODE_MAX_LENGTH,
+                                 CHOICES,
+                                 USER,
+                                 ADMIN,
+                                 MODERATOR)
 from users.validators import validate_username
 
 

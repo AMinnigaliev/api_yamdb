@@ -2,14 +2,19 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from api_yamdb.constants import CUT_LENGTH_TEXT
+from api_yamdb.constants import (CUT_LENGTH_TEXT,
+                                 CATEGORYNAME_MAX_LENGTH,
+                                 GENRENAME_MAX_LENGTH,
+                                 GENRESLUG_MAX_LENGTH,
+                                 TITLENAME_MAX_LENGTH)
 from reviews.validators import validate_year
 
 User = get_user_model()
 
 
 class Category(models.Model):
-    name = models.CharField('Название категории', max_length=256)
+    name = models.CharField('Название категории',
+                            max_length=CATEGORYNAME_MAX_LENGTH)
     slug = models.SlugField('Slug категории', unique=True)
 
     class Meta:
@@ -21,8 +26,11 @@ class Category(models.Model):
 
 
 class Genre(models.Model):
-    name = models.CharField('Название жанра', max_length=256)
-    slug = models.SlugField('Slug жанра', max_length=50, unique=True)
+    name = models.CharField('Название жанра',
+                            max_length=GENRENAME_MAX_LENGTH)
+    slug = models.SlugField('Slug жанра',
+                            max_length=GENRESLUG_MAX_LENGTH,
+                            unique=True)
 
     class Meta:
         verbose_name = 'жанр'
@@ -33,7 +41,8 @@ class Genre(models.Model):
 
 
 class Title(models.Model):
-    name = models.CharField('Название', max_length=256)
+    name = models.CharField('Название',
+                            max_length=TITLENAME_MAX_LENGTH)
     year = models.SmallIntegerField('Год выпуска', validators=[validate_year])
     description = models.TextField('Описание')
     genre = models.ManyToManyField(
