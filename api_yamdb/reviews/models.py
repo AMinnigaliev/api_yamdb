@@ -1,33 +1,24 @@
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+
+from api_yamdb.constants import NAME_MAX_LENGTH
 from reviews.abstracts import CategoryGenreBaseModel, CommentReviewBaseModel
 from reviews.validators import validate_year
-
-from api_yamdb.constants import (CATEGORY_NAME_LENGTH, GENRE_NAME_LENGTH,
-                                 TITLE_NAME_LENGTH)
 
 User = get_user_model()
 
 
 class Category(CategoryGenreBaseModel):
-    name = models.CharField(
-        'Название категории',
-        max_length=CATEGORY_NAME_LENGTH,
-    )
 
-    class Meta:
+    class Meta(CategoryGenreBaseModel.Meta):
         verbose_name = 'категорию'
         verbose_name_plural = 'Категории'
 
 
 class Genre(CategoryGenreBaseModel):
-    name = models.CharField(
-        'Название жанра',
-        max_length=GENRE_NAME_LENGTH,
-    )
 
-    class Meta:
+    class Meta(CategoryGenreBaseModel.Meta):
         verbose_name = 'жанр'
         verbose_name_plural = 'Жанры'
 
@@ -35,7 +26,7 @@ class Genre(CategoryGenreBaseModel):
 class Title(models.Model):
     name = models.CharField(
         'Название',
-        max_length=TITLE_NAME_LENGTH,
+        max_length=NAME_MAX_LENGTH,
     )
     year = models.SmallIntegerField('Год выпуска', validators=[validate_year])
     description = models.TextField('Описание')

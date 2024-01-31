@@ -1,12 +1,11 @@
-from django.core.validators import validate_slug
 from rest_framework import serializers
+
+from api_yamdb.constants import (CONFIRMATION_CODE_LENGTH, EMAIL_LENGTH,
+                                 USERNAME_LENGTH)
 from reviews.models import Category, Comment, Genre, Review, Title
 from reviews.validators import validate_year
 from users.models import YamdbUser
 from users.validators import validate_username
-
-from api_yamdb.constants import (CONFIRMATION_CODE_LENGTH, EMAIL_LENGTH,
-                                 USERNAME_LENGTH)
 
 
 class UsernameSerializer(serializers.Serializer):
@@ -65,7 +64,8 @@ class TitlePostPatchDelSerializer(serializers.ModelSerializer):
         many=True,
         slug_field='slug',
         required=True,
-        validators=[validate_slug],
+        allow_null=False,
+        allow_empty=False,
     )
 
     class Meta:

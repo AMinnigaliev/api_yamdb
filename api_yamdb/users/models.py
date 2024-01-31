@@ -1,10 +1,10 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from users.validators import validate_username
 
 from api_yamdb.constants import (ADMIN, CHOICES, CONFIRMATION_CODE_LENGTH,
                                  EMAIL_LENGTH, MODERATOR, USER,
                                  USERNAME_LENGTH)
+from users.validators import validate_username
 
 
 class YamdbUser(AbstractUser):

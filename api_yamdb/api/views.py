@@ -1,12 +1,3 @@
-from api.filters import TitleFilter
-from api.mixins import GenreCategoryViewMixin
-from api.permissions import (IsAdminUser, IsAdminUserOrReadOnly,
-                             IsAuthorAdminModeratorOrReadOnly)
-from api.serializers import (CategorySerializer, CommentSerializer,
-                             GenreSerializer, ReviewSerializer,
-                             SignupSerializer, TitleGetSerializer,
-                             TitlePostPatchDelSerializer, TokenSerializer,
-                             UserSerializer)
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
@@ -20,9 +11,18 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from reviews.models import Category, Comment, Genre, Review, Title
 
+from api.filters import TitleFilter
+from api.mixins import GenreCategoryViewMixin
+from api.permissions import (IsAdminUser, IsAdminUserOrReadOnly,
+                             IsAuthorAdminModeratorOrReadOnly)
+from api.serializers import (CategorySerializer, CommentSerializer,
+                             GenreSerializer, ReviewSerializer,
+                             SignupSerializer, TitleGetSerializer,
+                             TitlePostPatchDelSerializer, TokenSerializer,
+                             UserSerializer)
 from api_yamdb.constants import CONFIRMATION_CODE_LENGTH
+from reviews.models import Category, Comment, Genre, Review, Title
 
 User = get_user_model()
 
@@ -117,9 +117,7 @@ class UserViewSet(viewsets.ModelViewSet):
             partial=True
         )
         serializer.is_valid(raise_exception=True)
-        if not request.user.is_admin:
-            serializer.validated_data.pop('role', None)
-        serializer.save()
+        serializer.save(role=self.request.user.role)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 

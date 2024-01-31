@@ -12,9 +12,7 @@ EMAIL_LENGTH = 254
 CONFIRMATION_CODE_LENGTH = 6
 
 # Константы для приложения reviews
-CATEGORY_NAME_LENGTH = 256
-GENRE_NAME_LENGTH = 256
-TITLE_NAME_LENGTH = 256
+NAME_MAX_LENGTH = 256
 
 # Размер среза для строк отображаемых в админ зоне
 CUT_LENGTH_TEXT = 30

@@ -28,6 +28,7 @@ class IsAuthorAdminModeratorOrReadOnly(BasePermission):
         return bool(
             request.method in SAFE_METHODS
             or request.user
+            and request.user.is_authenticated
             and obj.author
             and (
                 obj.author == request.user
