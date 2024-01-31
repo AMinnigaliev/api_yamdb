@@ -1,31 +1,27 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-
-from api_yamdb.constants import (USERNAME_MAX_LENGTH,
-                                 EMAIL_MAX_LENGTH,
-                                 CODE_MAX_LENGTH,
-                                 CHOICES,
-                                 USER,
-                                 ADMIN,
-                                 MODERATOR)
 from users.validators import validate_username
+
+from api_yamdb.constants import (ADMIN, CHOICES, CONFIRMATION_CODE_LENGTH,
+                                 EMAIL_LENGTH, MODERATOR, USER,
+                                 USERNAME_LENGTH)
 
 
 class YamdbUser(AbstractUser):
     username = models.CharField(
         'Имя пользователя',
-        max_length=USERNAME_MAX_LENGTH,
+        max_length=USERNAME_LENGTH,
         unique=True,
         validators=[validate_username],
     )
     email = models.EmailField(
         'Адрес электронной почты',
-        max_length=EMAIL_MAX_LENGTH,
+        max_length=EMAIL_LENGTH,
         unique=True,
     )
     confirmation_code = models.CharField(
         'Проверочный код',
-        max_length=CODE_MAX_LENGTH,
+        max_length=CONFIRMATION_CODE_LENGTH,
         blank=True,
         null=True,
     )
@@ -38,7 +34,7 @@ class YamdbUser(AbstractUser):
     )
 
     class Meta:
-        verbose_name = 'пользователь'
+        verbose_name = 'пользователя'
         verbose_name_plural = 'Пользователи'
         ordering = ('username',)
 
@@ -47,7 +43,7 @@ class YamdbUser(AbstractUser):
 
     @property
     def is_admin(self):
-        return self.role == ADMIN or self.is_superuser
+        return self.role == ADMIN or self.is_superuser or self.is_staff
 
     @property
     def is_moderator(self):

@@ -1,10 +1,11 @@
 from itertools import chain
 
 from django.contrib import admin
+from reviews.models import Category, Comment, Genre, Review, Title
+from users.abstracts import CommentReviewAdminBaseModel
+from users.models import YamdbUser
 
 from api_yamdb.constants import CUT_LENGTH_TEXT
-from reviews.models import Category, Comment, Genre, Review, Title
-from users.models import YamdbUser
 
 
 class UserAdmin(admin.ModelAdmin):
@@ -26,19 +27,12 @@ class CategoryGenreAdmin(admin.ModelAdmin):
     ordering = ['name', 'slug']
 
 
-class CommentReviewBaseModel(admin.ModelAdmin):
-    search_fields = ('author__username',)
-
-    def text_short(self, obj):
-        return u"%s..." % (obj.text[:CUT_LENGTH_TEXT],)
-
-
-class ReviewAdmin(CommentReviewBaseModel):
+class ReviewAdmin(CommentReviewAdminBaseModel):
     list_display = ('id', 'text_short', 'author', 'score', 'pub_date', 'title')
     ordering = ['author', '-pub_date', '-score', 'title']
 
 
-class CommentAdmin(CommentReviewBaseModel):
+class CommentAdmin(CommentReviewAdminBaseModel):
     list_display = ('id', 'text_short', 'author', 'pub_date', 'review')
     ordering = ['author', '-pub_date']
 

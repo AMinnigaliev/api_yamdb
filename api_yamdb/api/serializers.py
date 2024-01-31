@@ -1,18 +1,17 @@
 from django.core.validators import validate_slug
 from rest_framework import serializers
-
-from api_yamdb.constants import (CODE_MAX_LENGTH,
-                                 EMAIL_MAX_LENGTH,
-                                 USERNAME_MAX_LENGTH)
 from reviews.models import Category, Comment, Genre, Review, Title
 from reviews.validators import validate_year
 from users.models import YamdbUser
 from users.validators import validate_username
 
+from api_yamdb.constants import (CONFIRMATION_CODE_LENGTH, EMAIL_LENGTH,
+                                 USERNAME_LENGTH)
+
 
 class UsernameSerializer(serializers.Serializer):
-    username = serializers.CharField(max_length=USERNAME_MAX_LENGTH,
-                                     required=True)
+    username = serializers.CharField(
+        max_length=USERNAME_LENGTH, required=True)
 
     def validate_username(self, value):
         validate_username(value)
@@ -20,13 +19,13 @@ class UsernameSerializer(serializers.Serializer):
 
 
 class SignupSerializer(UsernameSerializer):
-    email = serializers.EmailField(max_length=EMAIL_MAX_LENGTH,
-                                   required=True)
+    email = serializers.EmailField(
+        max_length=EMAIL_LENGTH, required=True)
 
 
 class TokenSerializer(UsernameSerializer):
-    confirmation_code = serializers.CharField(max_length=CODE_MAX_LENGTH,
-                                              required=True)
+    confirmation_code = serializers.CharField(
+        max_length=CONFIRMATION_CODE_LENGTH, required=True)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -66,7 +65,7 @@ class TitlePostPatchDelSerializer(serializers.ModelSerializer):
         many=True,
         slug_field='slug',
         required=True,
-        validators=[validate_slug]
+        validators=[validate_slug],
     )
 
     class Meta:
@@ -85,7 +84,7 @@ class TitlePostPatchDelSerializer(serializers.ModelSerializer):
 class TitleGetSerializer(serializers.ModelSerializer):
     category = CategorySerializer()
     genre = GenreSerializer(many=True)
-    rating = serializers.IntegerField(read_only=True)
+    rating = serializers.IntegerField(read_only=True, default=0)
 
     class Meta:
         model = Title
@@ -94,13 +93,11 @@ class TitleGetSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         try:
-            if instance.rating:
-                if instance.rating is None:
-                    instance.rating = 0
-                else:
-                    instance.rating = round(instance.rating)
+            instance.rating = round(instance.rating)
+        except TypeError:
+            pass
         except AttributeError:
-            instance.rating = 0
+            pass
         return super().to_representation(instance)
 
 

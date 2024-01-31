@@ -1,3 +1,12 @@
+from api.filters import TitleFilter
+from api.mixins import GenreCategoryViewMixin
+from api.permissions import (IsAdminUser, IsAdminUserOrReadOnly,
+                             IsAuthorAdminModeratorOrReadOnly)
+from api.serializers import (CategorySerializer, CommentSerializer,
+                             GenreSerializer, ReviewSerializer,
+                             SignupSerializer, TitleGetSerializer,
+                             TitlePostPatchDelSerializer, TokenSerializer,
+                             UserSerializer)
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
@@ -11,17 +20,9 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-
-from api.filters import TitleFilter
-from api.mixins import GenreCategoryViewMixin
-from api.permissions import (IsAdminUser, IsAdminUserOrReadOnly,
-                             IsAuthorAdminModeratorOrReadOnly)
-from api.serializers import (CategorySerializer, CommentSerializer,
-                             GenreSerializer,
-                             ReviewSerializer, SignupSerializer,
-                             TitleGetSerializer, TitlePostPatchDelSerializer,
-                             TokenSerializer, UserSerializer)
 from reviews.models import Category, Comment, Genre, Review, Title
+
+from api_yamdb.constants import CONFIRMATION_CODE_LENGTH
 
 User = get_user_model()
 
@@ -49,7 +50,7 @@ def signup(request):
                  'Если это вы, проверьте правильность введённых данных.')},
             status=status.HTTP_400_BAD_REQUEST,
         )
-    user.confirmation_code = get_random_string(length=6)
+    user.confirmation_code = get_random_string(length=CONFIRMATION_CODE_LENGTH)
     user.save()
     send_mail(
         subject="Регистрация на YaMDb",
